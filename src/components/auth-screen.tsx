@@ -123,7 +123,7 @@ export function AuthScreen() {
                   placeholder="e.g. alex_dev"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="pl-10 h-12 text-sm rounded-xl"
+                  className="pl-10 h-12 text-base sm:text-sm rounded-xl"
                   required
                   autoComplete="username"
                   disabled={loading}
@@ -141,7 +141,7 @@ export function AuthScreen() {
                   placeholder={activeTab === 'register' ? 'At least 6 characters' : 'Enter your password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10 h-12 text-sm rounded-xl"
+                  className="pl-10 h-12 text-base sm:text-sm rounded-xl"
                   required
                   autoComplete={activeTab === 'login' ? 'current-password' : 'new-password'}
                   disabled={loading}

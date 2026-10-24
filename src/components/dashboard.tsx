@@ -185,33 +185,33 @@ export function Dashboard({ initialJobs, currentUser, isCloudDb }: DashboardProp
     <div className="min-h-screen flex flex-col bg-background text-foreground font-sans">
       {/* Top Navbar */}
       <header className="border-b border-border/80 sticky top-0 z-20 backdrop-blur-md bg-background/90">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-primary text-primary-foreground flex items-center justify-center font-bold shadow-xs">
-              <Building className="w-5 h-5" />
+        <div className="max-w-6xl mx-auto px-3 sm:px-6 h-16 flex items-center justify-between gap-2 sm:gap-4">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-primary text-primary-foreground flex items-center justify-center font-bold shadow-xs shrink-0">
+              <Building className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
-            <div>
-              <span className="font-bold text-lg tracking-tight font-heading">
+            <div className="min-w-0">
+              <span className="font-bold text-sm sm:text-lg tracking-tight font-heading whitespace-nowrap">
                 Job Description Store
               </span>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1 sm:gap-3 shrink-0">
             {/* Dark/Light Theme Toggle */}
-            <ThemeToggle className="h-9 w-9" />
+            <ThemeToggle className="h-8 w-8 sm:h-9 sm:w-9" />
 
             {/* User Profile & Actions */}
-            <div className="flex items-center gap-1.5 pl-3 border-l border-border">
-              <div className="flex items-center gap-1.5 text-sm font-medium bg-muted/60 px-3 py-1.5 rounded-lg">
-                <UserIcon className="w-4 h-4 text-muted-foreground" />
-                <span className="max-w-[120px] truncate">{currentUser.username}</span>
+            <div className="flex items-center gap-1 pl-1.5 sm:pl-3 border-l border-border">
+              <div className="flex items-center gap-1 text-xs sm:text-sm font-medium bg-muted/60 px-2 sm:px-3 py-1.5 rounded-lg max-w-[90px] sm:max-w-[140px]">
+                <UserIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground shrink-0" />
+                <span className="truncate">{currentUser.username}</span>
               </div>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={handleLogout}
-                className="text-sm text-muted-foreground hover:text-foreground h-9 px-2.5 gap-1.5"
+                className="text-xs sm:text-sm text-muted-foreground hover:text-foreground h-8 w-8 sm:h-9 sm:w-auto p-0 sm:px-2.5 sm:gap-1.5 shrink-0"
                 title="Log out"
               >
                 <LogOut className="w-4 h-4" />
@@ -221,7 +221,7 @@ export function Dashboard({ initialJobs, currentUser, isCloudDb }: DashboardProp
                 variant="ghost"
                 size="sm"
                 onClick={() => setDeleteAccountOpen(true)}
-                className="text-sm text-muted-foreground hover:text-destructive hover:bg-destructive/10 h-9 px-2 gap-1.5"
+                className="text-sm text-muted-foreground hover:text-destructive hover:bg-destructive/10 h-9 px-2 gap-1.5 hidden md:inline-flex"
                 title="Delete Account"
               >
                 <UserX className="w-4 h-4" />

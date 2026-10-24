@@ -89,40 +89,41 @@ export function JdReader({ job }: JdReaderProps) {
     <div className="min-h-screen flex flex-col bg-background text-foreground font-sans">
       {/* Sticky Action Bar */}
       <header className="sticky top-0 z-20 border-b border-border/80 bg-background/90 backdrop-blur-md">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
+        <div className="max-w-5xl mx-auto px-3 sm:px-6 h-14 sm:h-16 flex items-center justify-between gap-2 sm:gap-4">
+          <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
             <Link
               href="/"
-              className="inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors py-2 px-3 rounded-lg hover:bg-muted"
+              className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors py-1.5 px-2 sm:px-3 rounded-lg hover:bg-muted shrink-0"
             >
               <ArrowLeft className="w-4 h-4" />
-              <span>Back to Home</span>
+              <span className="hidden sm:inline">Back to Home</span>
+              <span className="inline sm:hidden">Home</span>
             </Link>
 
-            <span className="text-muted-foreground/40 font-mono text-base">/</span>
+            <span className="text-muted-foreground/40 font-mono text-xs sm:text-base shrink-0">/</span>
 
-            <span className="text-sm font-bold truncate max-w-[160px] sm:max-w-none font-heading">
+            <span className="text-xs sm:text-sm font-bold truncate max-w-[100px] xs:max-w-[160px] sm:max-w-xs md:max-w-md font-heading" title={job.company_name}>
               {job.company_name}
             </span>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-3">
-            <ThemeToggle className="h-9 w-9" />
+          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+            <ThemeToggle className="h-8 w-8 sm:h-9 sm:w-9" />
 
             {/* 1-Click Copy Button */}
             <Button
               onClick={handleCopy}
               size="sm"
-              className="gap-2 h-10 px-5 text-sm font-semibold shadow-xs"
+              className="gap-1.5 sm:gap-2 h-9 sm:h-10 px-2.5 sm:px-5 text-xs sm:text-sm font-semibold shadow-xs"
             >
-              {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-              <span>{copied ? 'Copied JD!' : 'Copy Full JD'}</span>
+              {copied ? <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
+              <span>{copied ? 'Copied' : 'Copy'}</span>
             </Button>
 
             {/* Edit Button */}
             <Link href={`/edit/${job.id}`}>
-              <Button variant="outline" size="sm" className="gap-2 h-10 text-sm font-medium px-4">
-                <Pencil className="w-4 h-4" />
+              <Button variant="outline" size="sm" className="gap-1.5 h-9 sm:h-10 text-xs sm:text-sm font-medium px-2.5 sm:px-4">
+                <Pencil className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 <span className="hidden sm:inline">Edit</span>
               </Button>
             </Link>
@@ -133,10 +134,10 @@ export function JdReader({ job }: JdReaderProps) {
               size="sm"
               onClick={() => setDeleteOpen(true)}
               disabled={deleting}
-              className="h-10 w-10 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+              className="h-9 w-9 sm:h-10 sm:w-10 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
               title="Delete this JD"
             >
-              <Trash2 className="w-4 h-4" />
+              <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </Button>
           </div>
         </div>

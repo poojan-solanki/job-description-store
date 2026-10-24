@@ -155,54 +155,55 @@ export function JdEditor({ initialJob, defaultCompany = '' }: JdEditorProps) {
   const chars = description.length;
 
   return (
-    <div className="min-h-screen flex flex-col bg-background text-foreground font-sans pb-24">
+    <div className="min-h-screen flex flex-col bg-background text-foreground font-sans pb-24 overflow-x-hidden">
       {/* Top Fixed Header */}
       <header className="sticky top-0 z-30 border-b border-border/80 bg-background/95 backdrop-blur-md">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
+        <div className="max-w-5xl mx-auto px-3 sm:px-6 h-14 sm:h-16 flex items-center justify-between gap-2 sm:gap-4">
+          <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
             <Link
               href="/"
-              className="inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors py-2 px-3 rounded-lg hover:bg-muted"
+              className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors py-1.5 px-2 sm:px-3 rounded-lg hover:bg-muted shrink-0"
             >
               <ArrowLeft className="w-4 h-4" />
-              <span>Back to Home</span>
+              <span className="hidden sm:inline">Back to Home</span>
+              <span className="inline sm:hidden">Home</span>
             </Link>
 
-            <span className="text-muted-foreground/40 font-mono text-base">/</span>
+            <span className="text-muted-foreground/40 font-mono text-xs sm:text-base shrink-0">/</span>
 
-            <span className="text-sm font-bold truncate max-w-[200px] sm:max-w-none font-heading">
-              {initialJob ? `Edit: ${initialJob.company_name}` : 'New Job Description'}
+            <span className="text-xs sm:text-sm font-bold truncate max-w-[120px] sm:max-w-none font-heading">
+              {initialJob ? `Edit: ${initialJob.company_name}` : 'New JD'}
             </span>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <span className="hidden md:inline text-xs text-muted-foreground font-medium mr-1">
               {chars > 0 ? `${words} words · ${chars} chars` : 'Ctrl + S to save'}
             </span>
 
-            <ThemeToggle className="h-9 w-9" />
+            <ThemeToggle className="h-8 w-8 sm:h-9 sm:w-9" />
 
             <Button
               onClick={handleSave}
               disabled={saving}
               size="sm"
-              className="gap-2 h-10 px-5 text-sm font-semibold shadow-xs"
+              className="gap-1.5 sm:gap-2 h-9 sm:h-10 px-3 sm:px-5 text-xs sm:text-sm font-semibold shadow-xs"
             >
               {saving ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <Loader2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-spin" />
               ) : savedSuccess ? (
-                <Check className="w-4 h-4 text-emerald-400" />
+                <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400" />
               ) : (
-                <Save className="w-4 h-4" />
+                <Save className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               )}
-              <span>{saving ? 'Saving...' : initialJob ? 'Update Job Description' : 'Save to Store'}</span>
+              <span>{saving ? 'Saving...' : initialJob ? 'Update' : 'Save'}</span>
             </Button>
           </div>
         </div>
       </header>
 
       {/* Main Document Workspace */}
-      <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 py-10 sm:py-12 space-y-8">
+      <main className="flex-1 max-w-4xl w-full mx-auto px-3 sm:px-6 py-6 sm:py-12 space-y-6 sm:space-y-8">
         {/* Title Area: Role Title */}
         <div className="space-y-2">
           <Input
@@ -210,7 +211,7 @@ export function JdEditor({ initialJob, defaultCompany = '' }: JdEditorProps) {
             placeholder="Role / Title (e.g. Senior Backend Engineer)"
             value={roleTitle}
             onChange={(e) => setRoleTitle(e.target.value)}
-            className="text-3xl sm:text-4xl font-extrabold tracking-tight border-0 shadow-none px-0 h-auto py-1 focus-visible:ring-0 placeholder:text-muted-foreground/35 bg-transparent font-heading"
+            className="text-2xl sm:text-4xl font-extrabold tracking-tight border-0 shadow-none px-0 h-auto py-1 focus-visible:ring-0 placeholder:text-muted-foreground/35 bg-transparent font-heading"
           />
         </div>
 
@@ -300,33 +301,33 @@ export function JdEditor({ initialJob, defaultCompany = '' }: JdEditorProps) {
             </div>
 
             {/* Quick Template Chips */}
-            <div className="flex items-center gap-1.5 text-xs overflow-x-auto">
-              <span className="text-muted-foreground mr-1 hidden sm:inline font-medium">Add section:</span>
+            <div className="flex items-center gap-1.5 text-xs overflow-x-auto max-w-full pb-1 sm:pb-0">
+              <span className="text-muted-foreground mr-1 hidden sm:inline font-medium shrink-0">Add section:</span>
               <button
                 type="button"
                 onClick={() => handleInsertTemplate('overview')}
-                className="px-3 py-1 rounded-lg border border-border/80 bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground font-medium transition-colors"
+                className="px-2.5 py-1 rounded-lg border border-border/80 bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground font-medium transition-colors whitespace-nowrap shrink-0"
               >
                 + Overview
               </button>
               <button
                 type="button"
                 onClick={() => handleInsertTemplate('responsibilities')}
-                className="px-3 py-1 rounded-lg border border-border/80 bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground font-medium transition-colors"
+                className="px-2.5 py-1 rounded-lg border border-border/80 bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground font-medium transition-colors whitespace-nowrap shrink-0"
               >
                 + Responsibilities
               </button>
               <button
                 type="button"
                 onClick={() => handleInsertTemplate('requirements')}
-                className="px-3 py-1 rounded-lg border border-border/80 bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground font-medium transition-colors"
+                className="px-2.5 py-1 rounded-lg border border-border/80 bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground font-medium transition-colors whitespace-nowrap shrink-0"
               >
                 + Requirements
               </button>
               <button
                 type="button"
                 onClick={() => handleInsertTemplate('benefits')}
-                className="px-3 py-1 rounded-lg border border-border/80 bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground font-medium transition-colors"
+                className="px-2.5 py-1 rounded-lg border border-border/80 bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground font-medium transition-colors whitespace-nowrap shrink-0"
               >
                 + Benefits
               </button>
@@ -337,13 +338,13 @@ export function JdEditor({ initialJob, defaultCompany = '' }: JdEditorProps) {
             placeholder="Paste or write the complete job description here. Use plain text or markdown..."
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="min-h-[460px] font-mono text-sm leading-relaxed p-5 border border-border/80 rounded-2xl bg-card/60 focus-visible:ring-1 focus-visible:ring-ring shadow-xs resize-y"
+            className="min-h-[360px] sm:min-h-[460px] font-mono text-base sm:text-sm leading-relaxed p-4 sm:p-5 border border-border/80 rounded-2xl bg-card/60 focus-visible:ring-1 focus-visible:ring-ring shadow-xs resize-y w-full max-w-full"
             required
           />
         </div>
 
         {/* Personal Notes Section */}
-        <div className="p-5 sm:p-6 rounded-2xl border border-border/80 bg-card/60 space-y-2">
+        <div className="p-4 sm:p-6 rounded-2xl border border-border/80 bg-card/60 space-y-2">
           <Label htmlFor="notes" className="text-sm font-bold text-foreground/90 block font-heading">
             Personal Notes & Contacts (Optional)
           </Label>
@@ -353,23 +354,23 @@ export function JdEditor({ initialJob, defaultCompany = '' }: JdEditorProps) {
             placeholder="e.g. Applied via Sarah (referral). Round 1 technical interview scheduled for Thursday."
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            className="h-11 text-sm rounded-xl"
+            className="h-11 text-base sm:text-sm rounded-xl"
           />
         </div>
       </main>
 
       {/* Floating / Sticky Bottom Bar (Always clearly visible without scrolling!) */}
-      <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-border/80 bg-background/95 backdrop-blur-md shadow-lg py-3.5 px-4 sm:px-6">
-        <div className="max-w-4xl mx-auto flex items-center justify-between gap-4">
+      <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-border/80 bg-background/95 backdrop-blur-md shadow-lg py-2.5 sm:py-3.5 px-3 sm:px-6">
+        <div className="max-w-4xl mx-auto flex items-center justify-between gap-2 sm:gap-4">
           <Link
             href="/"
-            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5"
+            className="text-xs sm:text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5 shrink-0"
           >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Discard and Return Home</span>
+            <ArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            <span><span className="hidden sm:inline">Discard and </span>Return Home</span>
           </Link>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <span className="hidden sm:inline text-xs text-muted-foreground">
               {words} words · {chars} chars
             </span>
@@ -377,14 +378,14 @@ export function JdEditor({ initialJob, defaultCompany = '' }: JdEditorProps) {
             <Button
               onClick={handleSave}
               disabled={saving}
-              className="gap-2 h-11 px-7 text-sm font-semibold rounded-xl shadow-md"
+              className="gap-1.5 sm:gap-2 h-10 sm:h-11 px-4 sm:px-7 text-xs sm:text-sm font-semibold rounded-xl shadow-md"
             >
               {saving ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <Loader2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-spin" />
               ) : (
-                <Save className="w-4 h-4" />
+                <Save className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               )}
-              <span>{saving ? 'Saving...' : initialJob ? 'Update Job Description' : 'Save to Store'}</span>
+              <span>{saving ? 'Saving...' : initialJob ? 'Update JD' : 'Save JD'}</span>
             </Button>
           </div>
         </div>

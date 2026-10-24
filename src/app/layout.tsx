@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Plus_Jakarta_Sans, Inter, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 import { Toaster } from '@/components/ui/sonner';
@@ -26,6 +26,12 @@ const mono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: 'Job Description Store & Finder',
   description: 'Clean, modern company job description library with instant search, multi-user accounts, and persistent sessions.',
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
 };
 
 export default function RootLayout({
