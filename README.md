@@ -1,57 +1,75 @@
-# 📁 Job Description Vault
+# Job Description Store
 
-A modern, full-stack application built with **Next.js 16 (App Router)** and **shadcn/ui** to store, manage, and instantly search company job descriptions.
+A web application to archive, organize, and search company job descriptions with user authentication.
 
----
+## Overview
 
-## ✨ Features
+Job Description Store helps job seekers maintain a private, searchable repository of company job postings and interview notes. It features real-time search across company names and descriptions, dedicated editing and reader views, and application status tracking across the hiring lifecycle.
 
-- **🔐 Multi-User Authentication**: Register and login with username and password (hashed with `bcryptjs`).
-- **🍪 Persistent Cookie Sessions**: Secure, `httpOnly` JWT session cookies ensure users stay logged in across page refreshes, tabs, and visits without re-entering credentials.
-- **🔍 Instant Company Find / Search**: Real-time filtering by company name or role title as you type.
-- **📋 1-Click Copy**: Copy the entire job description directly to your clipboard with instant visual feedback.
-- **📊 Application Tracker**: Organize jobs by status (`Saved`, `Applied`, `Interviewing`, `Offer`, `Archived`).
-- **🎨 Premium shadcn/ui Design**: Built using Radix UI primitives and Tailwind CSS with responsive dark/light support.
-- **⚡ Dual Storage Architecture**:
-  - **Local Development**: Runs out of the box with zero setup using local persistent storage.
-  - **Production (Vercel)**: Connects seamlessly to serverless PostgreSQL (Neon, Supabase, Vercel Postgres, Railway).
+## Tech Stack
 
----
+- **Framework**: [Next.js](https://nextjs.org/) (App Router)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS, shadcn/ui
+- **Database**: PostgreSQL (`pg` / `@neondatabase/serverless`) with local file-based fallback
+- **Authentication**: JWT session cookies (`jose`), password hashing (`bcryptjs`)
 
-## 🚀 Quick Start (Local Development)
+## Features
 
-```bash
-# 1. Install dependencies (already installed in workspace)
-npm install
+- **Authentication**: User registration and login with hashed passwords and secure HTTP-only session cookies.
+- **Search & Filtering**: Real-time filtering by company name, role title, or status (`Saved`, `Applied`, `Interviewing`, `Offer`, `Archived`).
+- **Document Editor**: Full-page editor with structured fields (company, role, location, compensation) and quick section templates.
+- **Reader View**: Distraction-free reading view with one-click clipboard copying for quick reference during interviews.
+- **Account Management**: Self-service account deletion that removes all associated user records.
+- **Theme Support**: Built-in support for light, dark, and system themes.
 
-# 2. Start the local development server
-npm run dev
-```
+## Getting Started
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+### Prerequisites
 
----
+- Node.js 18.18 or later
+- npm, pnpm, or yarn
 
-## 🌐 Deploying to Vercel
+### Installation
 
-### Step 1: Create a Free Cloud Database
-1. Go to [Neon.tech](https://neon.tech) or [Supabase.com](https://supabase.com) and create a free PostgreSQL database.
-2. Copy your connection string (e.g. `postgresql://alex:password@ep-cool-db.us-east-2.aws.neon.tech/neondb?sslmode=require`).
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/poojan-solanki/job-description-store.git
+   cd job-description-store
+   ```
 
-### Step 2: Push to GitHub
-```bash
-git add .
-git commit -m "Initial commit of Job Description Store"
-git remote add origin https://github.com/your-username/job-description-store.git
-git push -u origin main
-```
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-### Step 3: Deploy on Vercel
-1. Go to [Vercel](https://vercel.com) and click **"Add New Project"**.
-2. Select your GitHub repository.
-3. In **Environment Variables**, add:
-   - `DATABASE_URL`: Your PostgreSQL connection string from Neon or Supabase.
-   - `SESSION_SECRET`: Any random string (e.g. `a-secure-secret-key-at-least-32-characters`).
-4. Click **Deploy**.
+3. Run the development server:
+   ```bash
+   npm run dev
+   ```
 
-Vercel will build and assign you a live `.vercel.app` URL. The app will automatically initialize database tables upon your first request!
+4. Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+> In development mode without a database URL configured, the application automatically uses a local file store at `.local_data/jd_store.json`.
+
+## Configuration
+
+The application can be configured using environment variables:
+
+| Variable | Required | Description |
+|---|---|---|
+| `DATABASE_URL` | Optional in dev / Required in prod | PostgreSQL connection string (Neon, Supabase, Railway, etc.). |
+| `SESSION_SECRET` | Recommended | Secret key used to sign JWT session cookies. |
+
+Database tables (`users` and `job_descriptions`) are created automatically upon initial connection.
+
+## Deployment
+
+### Deploy to Vercel
+
+1. Push your repository to GitHub.
+2. Import the project in [Vercel](https://vercel.com).
+3. Add your environment variables in project settings:
+   - `DATABASE_URL`: Connection string to your PostgreSQL instance.
+   - `SESSION_SECRET`: A secure random string for signing session tokens.
+4. Deploy the project.
