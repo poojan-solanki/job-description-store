@@ -1,36 +1,57 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 📁 Job Description Vault
 
-## Getting Started
+A modern, full-stack application built with **Next.js 16 (App Router)** and **shadcn/ui** to store, manage, and instantly search company job descriptions.
 
-First, run the development server:
+---
+
+## ✨ Features
+
+- **🔐 Multi-User Authentication**: Register and login with username and password (hashed with `bcryptjs`).
+- **🍪 Persistent Cookie Sessions**: Secure, `httpOnly` JWT session cookies ensure users stay logged in across page refreshes, tabs, and visits without re-entering credentials.
+- **🔍 Instant Company Find / Search**: Real-time filtering by company name or role title as you type.
+- **📋 1-Click Copy**: Copy the entire job description directly to your clipboard with instant visual feedback.
+- **📊 Application Tracker**: Organize jobs by status (`Saved`, `Applied`, `Interviewing`, `Offer`, `Archived`).
+- **🎨 Premium shadcn/ui Design**: Built using Radix UI primitives and Tailwind CSS with responsive dark/light support.
+- **⚡ Dual Storage Architecture**:
+  - **Local Development**: Runs out of the box with zero setup using local persistent storage.
+  - **Production (Vercel)**: Connects seamlessly to serverless PostgreSQL (Neon, Supabase, Vercel Postgres, Railway).
+
+---
+
+## 🚀 Quick Start (Local Development)
 
 ```bash
+# 1. Install dependencies (already installed in workspace)
+npm install
+
+# 2. Start the local development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🌐 Deploying to Vercel
 
-## Learn More
+### Step 1: Create a Free Cloud Database
+1. Go to [Neon.tech](https://neon.tech) or [Supabase.com](https://supabase.com) and create a free PostgreSQL database.
+2. Copy your connection string (e.g. `postgresql://alex:password@ep-cool-db.us-east-2.aws.neon.tech/neondb?sslmode=require`).
 
-To learn more about Next.js, take a look at the following resources:
+### Step 2: Push to GitHub
+```bash
+git add .
+git commit -m "Initial commit of Job Description Store"
+git remote add origin https://github.com/your-username/job-description-store.git
+git push -u origin main
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Step 3: Deploy on Vercel
+1. Go to [Vercel](https://vercel.com) and click **"Add New Project"**.
+2. Select your GitHub repository.
+3. In **Environment Variables**, add:
+   - `DATABASE_URL`: Your PostgreSQL connection string from Neon or Supabase.
+   - `SESSION_SECRET`: Any random string (e.g. `a-secure-secret-key-at-least-32-characters`).
+4. Click **Deploy**.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Vercel will build and assign you a live `.vercel.app` URL. The app will automatically initialize database tables upon your first request!
