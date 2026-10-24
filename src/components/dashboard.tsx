@@ -368,20 +368,22 @@ export function Dashboard({ initialJobs, currentUser, isCloudDb }: DashboardProp
                 >
                   <Card className="h-full flex flex-col justify-between hover:border-foreground/40 hover:shadow-md transition-all duration-150 border-border/80 bg-card/70 rounded-2xl">
                     <CardHeader className="pb-3 space-y-1.5">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold text-sm shrink-0 border border-primary/20">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start gap-2.5 min-w-0 flex-1">
+                          <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold text-sm shrink-0 border border-primary/20 mt-0.5">
                             {job.company_name.charAt(0).toUpperCase()}
                           </div>
-                          <CardTitle className="text-lg font-bold truncate group-hover:text-primary transition-colors font-heading">
+                          <CardTitle className="text-lg font-bold break-words group-hover:text-primary transition-colors font-heading leading-snug">
                             {job.company_name}
                           </CardTitle>
                         </div>
-                        {getStatusBadge(job.status)}
+                        <div className="shrink-0 pt-0.5">
+                          {getStatusBadge(job.status)}
+                        </div>
                       </div>
 
                       {job.role_title && (
-                        <div className="text-sm font-semibold text-foreground/80 truncate pt-0.5">
+                        <div className="text-sm font-semibold text-foreground/80 break-words pt-0.5 leading-snug">
                           {job.role_title}
                         </div>
                       )}

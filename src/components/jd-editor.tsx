@@ -36,11 +36,32 @@ export function JdEditor({ initialJob, defaultCompany = '' }: JdEditorProps) {
   const [location, setLocation] = useState(initialJob?.location || '');
   const [jobType, setJobType] = useState(initialJob?.job_type || 'Full-time');
   const [salaryRange, setSalaryRange] = useState(initialJob?.salary_range || '');
-  const [status, setStatus] = useState<ApplicationStatus>(initialJob?.status || 'Saved');
+  const [status, setStatus] = useState<ApplicationStatus>(initialJob?.status || 'Applied');
   const [description, setDescription] = useState(initialJob?.description || '');
   const [notes, setNotes] = useState(initialJob?.notes || '');
   const [saving, setSaving] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
+
+  // When opening a new JD (!initialJob), ensure other fields start fresh and status defaults to 'Applied'
+  useEffect(() => {
+    if (!initialJob) {
+      setCompanyName(defaultCompany);
+      setLocation('');
+      setSalaryRange('');
+      setStatus('Applied');
+      setDescription('');
+      setNotes('');
+    } else {
+      setCompanyName(initialJob.company_name);
+      setRoleTitle(initialJob.role_title || '');
+      setLocation(initialJob.location || '');
+      setJobType(initialJob.job_type || 'Full-time');
+      setSalaryRange(initialJob.salary_range || '');
+      setStatus(initialJob.status || 'Applied');
+      setDescription(initialJob.description || '');
+      setNotes(initialJob.notes || '');
+    }
+  }, [initialJob, defaultCompany]);
 
   // Keyboard shortcut Ctrl+S / Cmd+S
   useEffect(() => {
@@ -106,6 +127,16 @@ export function JdEditor({ initialJob, defaultCompany = '' }: JdEditorProps) {
             ? `Updated JD for ${res.job.company_name}`
             : `Saved JD for ${res.job.company_name}!`
         );
+        // Clear fields when saving a new job so next new JD opens empty
+        if (!initialJob) {
+          setCompanyName('');
+          setRoleTitle('');
+          setLocation('');
+          setSalaryRange('');
+          setStatus('Applied');
+          setDescription('');
+          setNotes('');
+        }
         // Refresh server components and navigate back to the home page
         router.refresh();
         router.push('/');
@@ -185,9 +216,9 @@ export function JdEditor({ initialJob, defaultCompany = '' }: JdEditorProps) {
 
         {/* Structured Metadata Grid */}
         <div className="p-5 sm:p-6 rounded-2xl border border-border/80 bg-card/70 shadow-xs space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-            {/* Company Name */}
-            <div className="space-y-1.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-4">
+            {/* Company Name (Wider column to comfortably fit long company names) */}
+            <div className="sm:col-span-2 lg:col-span-5 space-y-1.5">
               <Label htmlFor="company" className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5 uppercase tracking-wide">
                 <Building className="w-3.5 h-3.5 text-muted-foreground" />
                 Company <span className="text-destructive">*</span>
@@ -195,7 +226,7 @@ export function JdEditor({ initialJob, defaultCompany = '' }: JdEditorProps) {
               <Input
                 id="company"
                 type="text"
-                placeholder="e.g. Stripe, OpenAI"
+                placeholder="e.g. Stripe, OpenAI, Byteflow Innovations"
                 value={companyName}
                 onChange={(e) => setCompanyName(e.target.value)}
                 required
@@ -204,7 +235,7 @@ export function JdEditor({ initialJob, defaultCompany = '' }: JdEditorProps) {
             </div>
 
             {/* Location */}
-            <div className="space-y-1.5">
+            <div className="sm:col-span-1 lg:col-span-3 space-y-1.5">
               <Label htmlFor="loc" className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5 uppercase tracking-wide">
                 <MapPin className="w-3.5 h-3.5 text-muted-foreground" />
                 Location
@@ -220,7 +251,7 @@ export function JdEditor({ initialJob, defaultCompany = '' }: JdEditorProps) {
             </div>
 
             {/* Compensation */}
-            <div className="space-y-1.5">
+            <div className="sm:col-span-1 lg:col-span-2 space-y-1.5">
               <Label htmlFor="comp" className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5 uppercase tracking-wide">
                 <DollarSign className="w-3.5 h-3.5 text-muted-foreground" />
                 Compensation
@@ -235,8 +266,8 @@ export function JdEditor({ initialJob, defaultCompany = '' }: JdEditorProps) {
               />
             </div>
 
-            {/* Application Status */}
-            <div className="space-y-1.5">
+            {/* Application Status (Defaults to Applied) */}
+            <div className="sm:col-span-2 lg:col-span-2 space-y-1.5">
               <Label htmlFor="status" className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5 uppercase tracking-wide">
                 <Briefcase className="w-3.5 h-3.5 text-muted-foreground" />
                 Status
@@ -247,8 +278,8 @@ export function JdEditor({ initialJob, defaultCompany = '' }: JdEditorProps) {
                 onChange={(e) => setStatus(e.target.value as ApplicationStatus)}
                 className="w-full h-11 rounded-xl border border-input bg-background px-3 py-1 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring font-medium"
               >
+                <option value="Applied">Applied (Default)</option>
                 <option value="Saved">Saved</option>
-                <option value="Applied">Applied</option>
                 <option value="Interviewing">Interviewing</option>
                 <option value="Offer">Offer</option>
                 <option value="Rejected">Archived / Rejected</option>

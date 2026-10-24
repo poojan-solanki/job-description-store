@@ -148,14 +148,14 @@ export function JdReader({ job }: JdReaderProps) {
         <div className="space-y-5 border-b border-border/80 pb-8">
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div className="space-y-2">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold text-xl border border-primary/20">
+              <div className="flex items-start sm:items-center gap-3.5 flex-wrap">
+                <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold text-xl border border-primary/20 shrink-0 mt-0.5 sm:mt-0">
                   {job.company_name.charAt(0).toUpperCase()}
                 </div>
-                <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight font-heading">
+                <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight font-heading break-words">
                   {job.company_name}
                 </h1>
-                {getStatusBadge(job.status)}
+                <div className="shrink-0">{getStatusBadge(job.status)}</div>
               </div>
 
               {job.role_title && (

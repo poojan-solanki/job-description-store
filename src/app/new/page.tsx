@@ -17,7 +17,7 @@ async function NewJobContent({
   const resolvedParams = await searchParams;
   const company = resolvedParams?.company || '';
 
-  return <JdEditor defaultCompany={company} />;
+  return <JdEditor key={company || 'new-job'} defaultCompany={company} />;
 }
 
 export default function NewJobPage(props: {

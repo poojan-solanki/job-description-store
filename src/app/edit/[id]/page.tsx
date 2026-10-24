@@ -23,7 +23,7 @@ async function EditJobContent({
     notFound();
   }
 
-  return <JdEditor initialJob={job} />;
+  return <JdEditor key={job.id} initialJob={job} />;
 }
 
 export default function EditJobPage(props: {

@@ -1,5 +1,7 @@
 # Job Description Store
 
+**Live Application**: [https://job-description-store-czkn4gr8d-poojan9.vercel.app/](https://job-description-store-czkn4gr8d-poojan9.vercel.app/)
+
 A web application to archive, organize, and search company job descriptions with user authentication.
 
 ## Overview
@@ -13,15 +15,6 @@ Job Description Store helps job seekers maintain a private, searchable repositor
 - **Styling**: Tailwind CSS, shadcn/ui
 - **Database**: PostgreSQL (`pg` / `@neondatabase/serverless`) with local file-based fallback
 - **Authentication**: JWT session cookies (`jose`), password hashing (`bcryptjs`)
-
-## Features
-
-- **Authentication**: User registration and login with hashed passwords and secure HTTP-only session cookies.
-- **Search & Filtering**: Real-time filtering by company name, role title, or status (`Saved`, `Applied`, `Interviewing`, `Offer`, `Archived`).
-- **Document Editor**: Full-page editor with structured fields (company, role, location, compensation) and quick section templates.
-- **Reader View**: Distraction-free reading view with one-click clipboard copying for quick reference during interviews.
-- **Account Management**: Self-service account deletion that removes all associated user records.
-- **Theme Support**: Built-in support for light, dark, and system themes.
 
 ## Getting Started
 
@@ -62,14 +55,3 @@ The application can be configured using environment variables:
 | `SESSION_SECRET` | Recommended | Secret key used to sign JWT session cookies. |
 
 Database tables (`users` and `job_descriptions`) are created automatically upon initial connection.
-
-## Deployment
-
-### Deploy to Vercel
-
-1. Push your repository to GitHub.
-2. Import the project in [Vercel](https://vercel.com).
-3. Add your environment variables in project settings:
-   - `DATABASE_URL`: Connection string to your PostgreSQL instance.
-   - `SESSION_SECRET`: A secure random string for signing session tokens.
-4. Deploy the project.
