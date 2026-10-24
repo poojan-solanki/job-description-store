@@ -1,6 +1,6 @@
 # Job Description Store
 
-**Live Application**: [https://job-description-store-czkn4gr8d-poojan9.vercel.app/](https://job-description-store-czkn4gr8d-poojan9.vercel.app/)
+**Live Application**: [https://job-description-store.vercel.app/](https://job-description-store.vercel.app/)
 
 A web application to archive, organize, and search company job descriptions with user authentication.
 
