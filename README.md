@@ -6,7 +6,11 @@ A web application to archive, organize, and search company job descriptions with
 
 ## Overview
 
-Job Description Store helps job seekers maintain a private, searchable repository of company job postings and interview notes. It features real-time search across company names and descriptions, dedicated editing and reader views, and application status tracking across the hiring lifecycle.
+During active job searches, candidates often apply to numerous positions across different companies. Even with identical job titles, roles frequently demand vastly different skill sets, responsibilities, and technical stacks that require tailored interview preparation.
+
+A common challenge arises weeks later when interview invitations arrive: emails often omit the original job description, and the public listings on career portals have frequently expired or been taken down.
+
+**Job Description Store** provides a private, searchable repository to archive complete job postings at the time of application. When a company reaches out, candidates can instantly search the company name, review the exact requirements and expectations, and prepare for interviews with clarity.
 
 ## Tech Stack
 
