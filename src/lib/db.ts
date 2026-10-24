@@ -4,15 +4,19 @@ import path from 'path';
 import crypto from 'crypto';
 import { User, JobDescription, CreateJobInput, UpdateJobInput } from './types';
 
-// Check if PostgreSQL connection URL is provided
-const isPostgresConfigured = Boolean(process.env.DATABASE_URL);
+// Check if PostgreSQL connection URL is provided (supports DATABASE_URL, POSTGRES_URL, etc.)
+function getDatabaseUrl(): string | undefined {
+  return process.env.DATABASE_URL || process.env.POSTGRES_URL || process.env.POSTGRES_URL_NON_POOLING;
+}
+
+const isPostgresConfigured = Boolean(getDatabaseUrl());
 
 let pgPool: Pool | null = null;
 let pgInitialized = false;
 
 function getPgPool(): Pool {
   if (!pgPool) {
-    const connectionString = process.env.DATABASE_URL!;
+    const connectionString = getDatabaseUrl()!;
     const isLocalhost = connectionString.includes('localhost') || connectionString.includes('127.0.0.1');
 
     pgPool = new Pool({
