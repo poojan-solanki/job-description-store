@@ -7,8 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { DeleteDialog } from '@/components/delete-dialog';
-import { JobDescription } from '@/lib/types';
-import { deleteJobAction } from '@/app/actions/jobs';
+import { JobDescription, ApplicationStatus } from '@/lib/types';
+import { deleteJobAction, updateJobStatusAction } from '@/app/actions/jobs';
 import { toast } from 'sonner';
 import {
   ArrowLeft,
@@ -19,9 +19,10 @@ import {
   Building,
   Briefcase,
   MapPin,
-  DollarSign,
+  IndianRupee,
   Calendar,
   Clock,
+  ChevronDown,
 } from 'lucide-react';
 
 interface JdReaderProps {
@@ -64,18 +65,38 @@ export function JdReader({ job }: JdReaderProps) {
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
+  const [status, setStatus] = useState<ApplicationStatus>(job.status);
+
+  const handleStatusChange = async (newStatus: ApplicationStatus) => {
+    const prev = status;
+    setStatus(newStatus);
+    try {
+      const res = await updateJobStatusAction(job.id, newStatus);
+      if (res.success) {
+        toast.success(`Status updated to "${newStatus}"`);
+        router.refresh();
+      } else {
+        setStatus(prev);
+        toast.error(res.error || 'Failed to update status');
+      }
+    } catch {
+      setStatus(prev);
+      toast.error('Failed to update status');
+    }
+  };
+
+  const getStatusBadgeStyle = (st: ApplicationStatus) => {
+    switch (st) {
       case 'Applied':
-        return <Badge className="text-sm px-3 py-1 bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-500/30">Applied</Badge>;
+        return 'bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-500/30 hover:bg-blue-500/25';
       case 'Interviewing':
-        return <Badge className="text-sm px-3 py-1 bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30">Interviewing</Badge>;
+        return 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30 hover:bg-amber-500/25';
       case 'Offer':
-        return <Badge className="text-sm px-3 py-1 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30">Offer</Badge>;
+        return 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/25';
       case 'Rejected':
-        return <Badge variant="secondary" className="text-sm px-3 py-1">Archived</Badge>;
+        return 'bg-muted text-muted-foreground border-border hover:bg-muted/80';
       default:
-        return <Badge variant="outline" className="text-sm px-3 py-1 font-medium">Saved</Badge>;
+        return 'bg-secondary text-secondary-foreground border-border hover:bg-secondary/80';
     }
   };
 
@@ -102,7 +123,7 @@ export function JdReader({ job }: JdReaderProps) {
 
             <span className="text-muted-foreground/40 font-mono text-xs sm:text-base shrink-0">/</span>
 
-            <span className="text-xs sm:text-sm font-bold truncate max-w-[100px] xs:max-w-[160px] sm:max-w-xs md:max-w-md font-heading" title={job.company_name}>
+            <span className="text-xs sm:text-sm font-bold truncate max-w-[80px] min-[360px]:max-w-[130px] sm:max-w-xs md:max-w-md font-heading" title={job.company_name}>
               {job.company_name}
             </span>
           </div>
@@ -156,7 +177,28 @@ export function JdReader({ job }: JdReaderProps) {
                 <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight font-heading break-words">
                   {job.company_name}
                 </h1>
-                <div className="shrink-0">{getStatusBadge(job.status)}</div>
+                <div className="shrink-0 relative group/status">
+                  <div
+                    className={`relative inline-flex items-center gap-1 rounded-full border px-3 py-1 text-sm font-semibold transition-all cursor-pointer shadow-2xs ${getStatusBadgeStyle(
+                      status
+                    )}`}
+                  >
+                    <span>{status === 'Rejected' ? 'Archived' : status}</span>
+                    <ChevronDown className="w-3.5 h-3.5 opacity-60 group-hover/status:opacity-100 transition-opacity" />
+                    <select
+                      value={status}
+                      onChange={(e) => handleStatusChange(e.target.value as ApplicationStatus)}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer text-sm"
+                      title="Change application status"
+                    >
+                      <option value="Applied" className="bg-popover text-popover-foreground">Applied</option>
+                      <option value="Saved" className="bg-popover text-popover-foreground">Saved</option>
+                      <option value="Interviewing" className="bg-popover text-popover-foreground">Interviewing</option>
+                      <option value="Offer" className="bg-popover text-popover-foreground">Offer</option>
+                      <option value="Rejected" className="bg-popover text-popover-foreground">Archived / Rejected</option>
+                    </select>
+                  </div>
+                </div>
               </div>
 
               {job.role_title && (
@@ -178,7 +220,7 @@ export function JdReader({ job }: JdReaderProps) {
             )}
             {job.salary_range && (
               <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/60 text-foreground/90 font-medium">
-                <DollarSign className="w-4 h-4 text-muted-foreground" />
+                <IndianRupee className="w-4 h-4 text-muted-foreground" />
                 {job.salary_range}
               </span>
             )}

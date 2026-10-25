@@ -5,10 +5,11 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { JobDescription, ApplicationStatus } from '@/lib/types';
 import { logoutAction } from '@/app/actions/auth';
-import { deleteJobAction, getJobsAction } from '@/app/actions/jobs';
+import { deleteJobAction, getJobsAction, updateJobStatusAction } from '@/app/actions/jobs';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { DeleteDialog } from '@/components/delete-dialog';
 import { DeleteAccountDialog } from '@/components/delete-account-dialog';
+import { DataBackupDialog } from '@/components/data-backup-dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,7 +21,7 @@ import {
   Building,
   Briefcase,
   MapPin,
-  DollarSign,
+  IndianRupee,
   Copy,
   Check,
   Eye,
@@ -30,6 +31,9 @@ import {
   User as UserIcon,
   UserX,
   Sparkles,
+  ChevronDown,
+  ArrowUpDown,
+  Upload,
 } from 'lucide-react';
 
 interface DashboardProps {
@@ -53,6 +57,7 @@ export function Dashboard({ initialJobs, currentUser, isCloudDb }: DashboardProp
   const [jobToDelete, setJobToDelete] = useState<{ id: string; companyName: string } | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteAccountOpen, setDeleteAccountOpen] = useState(false);
+  const [backupOpen, setBackupOpen] = useState(false);
 
   // Keyboard shortcut: Press '/' to focus search
   useEffect(() => {
@@ -75,25 +80,23 @@ export function Dashboard({ initialJobs, currentUser, isCloudDb }: DashboardProp
     setJobs(initialJobs);
   }, [initialJobs]);
 
+  const syncJobs = async () => {
+    try {
+      const res = await getJobsAction();
+      if (res.success && res.jobs) {
+        setJobs(res.jobs);
+      }
+    } catch (err) {
+      console.error('Failed to sync latest jobs:', err);
+    }
+  };
+
   // Immediately refresh and synchronize fresh jobs from DB on mount and window focus
   useEffect(() => {
-    let active = true;
     router.refresh();
-    const syncJobs = async () => {
-      try {
-        const res = await getJobsAction();
-        if (active && res.success && res.jobs) {
-          setJobs(res.jobs);
-        }
-      } catch (err) {
-        console.error('Failed to sync latest jobs:', err);
-      }
-    };
-
     syncJobs();
     window.addEventListener('focus', syncJobs);
     return () => {
-      active = false;
       window.removeEventListener('focus', syncJobs);
     };
   }, [router]);
@@ -166,18 +169,45 @@ export function Dashboard({ initialJobs, currentUser, isCloudDb }: DashboardProp
     }
   };
 
-  const getStatusBadge = (status: ApplicationStatus) => {
+  const handleStatusChange = async (
+    e: React.ChangeEvent<HTMLSelectElement>,
+    jobId: string,
+    newStatus: ApplicationStatus
+  ) => {
+    e.stopPropagation();
+    const prevJobs = [...jobs];
+    // Optimistic update so UI and stats reflect immediately
+    setJobs((prev) =>
+      prev.map((job) => (job.id === jobId ? { ...job, status: newStatus } : job))
+    );
+
+    try {
+      const res = await updateJobStatusAction(jobId, newStatus);
+      if (res.success) {
+        toast.success(`Status updated to "${newStatus}"`);
+        router.refresh();
+      } else {
+        setJobs(prevJobs);
+        toast.error(res.error || 'Failed to update status.');
+      }
+    } catch {
+      setJobs(prevJobs);
+      toast.error('Failed to update status.');
+    }
+  };
+
+  const getStatusBadgeStyle = (status: ApplicationStatus) => {
     switch (status) {
       case 'Applied':
-        return <Badge className="text-xs px-2.5 py-0.5 bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-500/30">Applied</Badge>;
+        return 'bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-500/30 hover:bg-blue-500/25';
       case 'Interviewing':
-        return <Badge className="text-xs px-2.5 py-0.5 bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30">Interviewing</Badge>;
+        return 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30 hover:bg-amber-500/25';
       case 'Offer':
-        return <Badge className="text-xs px-2.5 py-0.5 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30">Offer</Badge>;
+        return 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/25';
       case 'Rejected':
-        return <Badge variant="secondary" className="text-xs px-2.5 py-0.5">Archived</Badge>;
+        return 'bg-muted text-muted-foreground border-border hover:bg-muted/80';
       default:
-        return <Badge variant="outline" className="text-xs px-2.5 py-0.5 font-medium">Saved</Badge>;
+        return 'bg-secondary text-secondary-foreground border-border hover:bg-secondary/80';
     }
   };
 
@@ -191,8 +221,9 @@ export function Dashboard({ initialJobs, currentUser, isCloudDb }: DashboardProp
               <Building className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
             <div className="min-w-0">
-              <span className="font-bold text-sm sm:text-lg tracking-tight font-heading whitespace-nowrap">
-                Job Description Store
+              <span className="font-bold text-sm sm:text-lg tracking-tight font-heading truncate block">
+                <span className="hidden min-[420px]:inline">Job Description Store</span>
+                <span className="min-[420px]:hidden">JD Store</span>
               </span>
             </div>
           </div>
@@ -202,8 +233,11 @@ export function Dashboard({ initialJobs, currentUser, isCloudDb }: DashboardProp
             <ThemeToggle className="h-8 w-8 sm:h-9 sm:w-9" />
 
             {/* User Profile & Actions */}
-            <div className="flex items-center gap-1 pl-1.5 sm:pl-3 border-l border-border">
-              <div className="flex items-center gap-1 text-xs sm:text-sm font-medium bg-muted/60 px-2 sm:px-3 py-1.5 rounded-lg max-w-[90px] sm:max-w-[140px]">
+            <div className="flex items-center gap-1 pl-1 sm:pl-3 border-l border-border">
+              <div
+                className="flex items-center gap-1 text-xs sm:text-sm font-medium bg-muted/60 px-1.5 sm:px-3 py-1.5 rounded-lg max-w-[65px] min-[360px]:max-w-[95px] sm:max-w-[140px]"
+                title={currentUser.username}
+              >
                 <UserIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground shrink-0" />
                 <span className="truncate">{currentUser.username}</span>
               </div>
@@ -242,10 +276,10 @@ export function Dashboard({ initialJobs, currentUser, isCloudDb }: DashboardProp
             <Input
               ref={searchInputRef}
               type="text"
-              placeholder="Find company JD (e.g. Google, Stripe, Amazon)..."
+              placeholder="Find company JD (e.g. Google, Stripe)..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-12 pr-24 h-13 text-base shadow-xs bg-card border-border/80 rounded-2xl"
+              className="pl-11 sm:pl-12 pr-10 sm:pr-24 h-12 sm:h-13 text-sm sm:text-base shadow-xs bg-card border-border/80 rounded-2xl"
             />
             <div className="absolute right-3.5 top-3.5 flex items-center gap-2 pointer-events-none">
               {searchQuery ? (
@@ -264,13 +298,27 @@ export function Dashboard({ initialJobs, currentUser, isCloudDb }: DashboardProp
             </div>
           </div>
 
-          {/* Dedicated Full-Page Add Button */}
-          <Link href="/new">
-            <Button className="gap-2.5 h-13 px-6 rounded-2xl shadow-xs shrink-0 w-full sm:w-auto text-sm font-semibold">
-              <Plus className="h-5 w-5" />
-              <span>Add Job Description</span>
+          {/* Action Buttons: Import/Export & Add Button */}
+          <div className="flex items-center gap-2.5 shrink-0">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setBackupOpen(true)}
+              className="gap-2 h-12 sm:h-13 px-3.5 sm:px-4 rounded-2xl border-border/80 text-xs sm:text-sm font-semibold hover:bg-muted"
+              title="Import or Export your job descriptions"
+            >
+              <ArrowUpDown className="w-4 h-4 text-muted-foreground" />
+              <span className="hidden min-[480px]:inline">Import / Export</span>
+              <span className="min-[480px]:hidden">Backup</span>
             </Button>
-          </Link>
+
+            <Link href="/new" className="flex-1 sm:flex-initial">
+              <Button className="gap-2 sm:gap-2.5 h-12 sm:h-13 px-4 sm:px-6 rounded-2xl shadow-xs shrink-0 w-full text-xs sm:text-sm font-semibold">
+                <Plus className="h-4 w-4 sm:h-5 sm:w-5" />
+                <span>Add Job Description</span>
+              </Button>
+            </Link>
+          </div>
         </div>
 
         {/* Filter Pills & Stats Row */}
@@ -291,13 +339,13 @@ export function Dashboard({ initialJobs, currentUser, isCloudDb }: DashboardProp
             ))}
           </div>
 
-          <div className="flex items-center gap-4 text-muted-foreground font-medium text-xs sm:text-sm">
+          <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 sm:gap-4 text-muted-foreground font-medium text-xs sm:text-sm">
             <span>Total: <strong className="text-foreground">{stats.total}</strong></span>
-            <span>·</span>
+            <span className="text-muted-foreground/40">·</span>
             <span>Applied: <strong className="text-foreground">{stats.applied}</strong></span>
-            <span>·</span>
+            <span className="text-muted-foreground/40">·</span>
             <span>Interviewing: <strong className="text-foreground">{stats.interviewing}</strong></span>
-            <span>·</span>
+            <span className="text-muted-foreground/40">·</span>
             <span>Offers: <strong className="text-foreground">{stats.offers}</strong></span>
           </div>
         </div>
@@ -342,12 +390,24 @@ export function Dashboard({ initialJobs, currentUser, isCloudDb }: DashboardProp
                 <p className="text-sm text-muted-foreground mt-1.5 max-w-sm mx-auto">
                   Add your first company name and job description to begin building your store.
                 </p>
-                <Link href="/new">
-                  <Button size="sm" className="mt-4 gap-1.5 text-xs h-9 px-4 font-semibold">
-                    <Plus className="w-4 h-4" />
-                    Add First Job Description
+                <div className="flex flex-wrap items-center justify-center gap-3 mt-4">
+                  <Link href="/new">
+                    <Button size="sm" className="gap-1.5 text-xs h-9 px-4 font-semibold">
+                      <Plus className="w-4 h-4" />
+                      Add First Job Description
+                    </Button>
+                  </Link>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setBackupOpen(true)}
+                    className="gap-1.5 text-xs h-9 px-3.5 font-medium"
+                  >
+                    <Upload className="w-3.5 h-3.5 text-muted-foreground" />
+                    Import Backup
                   </Button>
-                </Link>
+                </div>
               </>
             )}
           </div>
@@ -359,8 +419,8 @@ export function Dashboard({ initialJobs, currentUser, isCloudDb }: DashboardProp
                 <div
                   key={job.id}
                   onClick={(e) => {
-                    // Navigate only if the click was not on a button
-                    if (!(e.target as HTMLElement).closest('button, a')) {
+                    // Navigate only if the click was not on a button, link, or select
+                    if (!(e.target as HTMLElement).closest('button, a, select')) {
                       router.push(`/job/${job.id}`);
                     }
                   }}
@@ -377,8 +437,31 @@ export function Dashboard({ initialJobs, currentUser, isCloudDb }: DashboardProp
                             {job.company_name}
                           </CardTitle>
                         </div>
-                        <div className="shrink-0 pt-0.5">
-                          {getStatusBadge(job.status)}
+                        <div
+                          className="shrink-0 pt-0.5 relative group/status"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <div
+                            className={`relative inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-all cursor-pointer shadow-2xs ${getStatusBadgeStyle(
+                              job.status
+                            )}`}
+                          >
+                            <span>{job.status === 'Rejected' ? 'Archived' : job.status}</span>
+                            <ChevronDown className="w-3 h-3 opacity-60 group-hover/status:opacity-100 transition-opacity" />
+                            <select
+                              value={job.status}
+                              onChange={(e) => handleStatusChange(e, job.id, e.target.value as ApplicationStatus)}
+                              onClick={(e) => e.stopPropagation()}
+                              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer text-xs"
+                              title="Change application status"
+                            >
+                              <option value="Applied" className="bg-popover text-popover-foreground">Applied</option>
+                              <option value="Saved" className="bg-popover text-popover-foreground">Saved</option>
+                              <option value="Interviewing" className="bg-popover text-popover-foreground">Interviewing</option>
+                              <option value="Offer" className="bg-popover text-popover-foreground">Offer</option>
+                              <option value="Rejected" className="bg-popover text-popover-foreground">Archived / Rejected</option>
+                            </select>
+                          </div>
                         </div>
                       </div>
 
@@ -400,7 +483,7 @@ export function Dashboard({ initialJobs, currentUser, isCloudDb }: DashboardProp
                         )}
                         {job.salary_range && (
                           <span className="inline-flex items-center gap-1.5 bg-muted/60 px-2.5 py-1 rounded-md font-medium text-foreground/80">
-                            <DollarSign className="w-3.5 h-3.5 text-muted-foreground" />
+                            <IndianRupee className="w-3.5 h-3.5 text-muted-foreground" />
                             {job.salary_range}
                           </span>
                         )}
@@ -492,6 +575,14 @@ export function Dashboard({ initialJobs, currentUser, isCloudDb }: DashboardProp
         open={deleteAccountOpen}
         onOpenChange={setDeleteAccountOpen}
         username={currentUser.username}
+      />
+
+      {/* Import & Export Backup Dialog */}
+      <DataBackupDialog
+        open={backupOpen}
+        onOpenChange={setBackupOpen}
+        jobs={jobs}
+        onImportSuccess={syncJobs}
       />
     </div>
   );

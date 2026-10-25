@@ -418,3 +418,129 @@ export async function deleteJobDescription(id: string, userId: string): Promise<
   }
   return false;
 }
+
+export interface ImportResult {
+  importedCount: number;
+  skippedCount: number;
+  total: number;
+}
+
+export async function importJobDescriptions(
+  userId: string,
+  items: Array<CreateJobInput>,
+  skipDuplicates = true
+): Promise<ImportResult> {
+  const validItems = items.filter(
+    (item) =>
+      item &&
+      typeof item.company_name === 'string' &&
+      item.company_name.trim().length > 0 &&
+      typeof item.description === 'string' &&
+      item.description.trim().length > 0
+  );
+
+  let importedCount = 0;
+  let skippedCount = items.length - validItems.length;
+
+  if (isPostgresConfigured) {
+    await initPostgres();
+    const pool = getPgPool();
+
+    // Fetch existing records for duplicate check
+    const existingRes = await pool.query(
+      'SELECT company_name, role_title FROM job_descriptions WHERE user_id = $1',
+      [userId]
+    );
+    const existingKeys = new Set(
+      existingRes.rows.map(
+        (r) => `${r.company_name.toLowerCase().trim()}___${(r.role_title || '').toLowerCase().trim()}`
+      )
+    );
+
+    for (const item of validItems) {
+      const key = `${item.company_name.toLowerCase().trim()}___${(item.role_title || '').toLowerCase().trim()}`;
+      if (skipDuplicates && existingKeys.has(key)) {
+        skippedCount++;
+        continue;
+      }
+
+      const id = crypto.randomUUID();
+      const now = new Date().toISOString();
+      const status =
+        item.status && ['Saved', 'Applied', 'Interviewing', 'Offer', 'Rejected'].includes(item.status)
+          ? item.status
+          : 'Saved';
+
+      await pool.query(
+        `INSERT INTO job_descriptions (
+          id, user_id, company_name, role_title, location, job_type, salary_range, description, notes, status, created_at, updated_at
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
+        [
+          id,
+          userId,
+          item.company_name.trim(),
+          item.role_title?.trim() || '',
+          item.location?.trim() || '',
+          item.job_type?.trim() || 'Full-time',
+          item.salary_range?.trim() || '',
+          item.description.trim(),
+          item.notes?.trim() || '',
+          status,
+          now,
+          now,
+        ]
+      );
+      existingKeys.add(key);
+      importedCount++;
+    }
+
+    return { importedCount, skippedCount, total: items.length };
+  }
+
+  // Local JSON store fallback
+  const store = await getLocalStore();
+  const existingKeys = new Set(
+    store.jobDescriptions
+      .filter((j) => j.user_id === userId)
+      .map((j) => `${j.company_name.toLowerCase().trim()}___${(j.role_title || '').toLowerCase().trim()}`)
+  );
+
+  for (const item of validItems) {
+    const key = `${item.company_name.toLowerCase().trim()}___${(item.role_title || '').toLowerCase().trim()}`;
+    if (skipDuplicates && existingKeys.has(key)) {
+      skippedCount++;
+      continue;
+    }
+
+    const now = new Date().toISOString();
+    const status =
+      item.status && ['Saved', 'Applied', 'Interviewing', 'Offer', 'Rejected'].includes(item.status)
+        ? item.status
+        : 'Saved';
+
+    const newJd: JobDescription = {
+      id: crypto.randomUUID(),
+      user_id: userId,
+      company_name: item.company_name.trim(),
+      role_title: item.role_title?.trim() || '',
+      location: item.location?.trim() || '',
+      job_type: item.job_type?.trim() || 'Full-time',
+      salary_range: item.salary_range?.trim() || '',
+      description: item.description.trim(),
+      notes: item.notes?.trim() || '',
+      status,
+      created_at: now,
+      updated_at: now,
+    };
+
+    store.jobDescriptions.push(newJd);
+    existingKeys.add(key);
+    importedCount++;
+  }
+
+  if (importedCount > 0) {
+    await saveLocalStore(store);
+  }
+
+  return { importedCount, skippedCount, total: items.length };
+}

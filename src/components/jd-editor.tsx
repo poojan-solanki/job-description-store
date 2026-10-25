@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -18,7 +18,7 @@ import {
   Building,
   Briefcase,
   MapPin,
-  DollarSign,
+  IndianRupee,
   FileText,
   Sparkles,
   Check,
@@ -63,17 +63,20 @@ export function JdEditor({ initialJob, defaultCompany = '' }: JdEditorProps) {
     }
   }, [initialJob, defaultCompany]);
 
+  // Keep a ref to handleSave so keydown listener always calls the freshest state
+  const handleSaveRef = useRef<() => void>(() => {});
+
   // Keyboard shortcut Ctrl+S / Cmd+S
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+      if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) {
         e.preventDefault();
-        handleSave();
+        handleSaveRef.current();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  });
+  }, []);
 
   const handleInsertTemplate = (templateType: string) => {
     let snippet = '';
@@ -88,7 +91,7 @@ export function JdEditor({ initialJob, defaultCompany = '' }: JdEditorProps) {
         snippet = '\n\n## Qualifications & Requirements\n- 5+ years of relevant industry experience in...\n- Deep proficiency with modern languages and cloud architectures...\n- Strong problem-solving skills and passion for customer impact...';
         break;
       case 'benefits':
-        snippet = '\n\n## Compensation & Benefits\n- Highly competitive base salary + equity compensation\n- Comprehensive health, dental, and vision coverage\n- Flexible PTO and continuous learning budget';
+        snippet = '\n\n## Salary & Benefits\n- Competitive base salary (INR) + performance bonus\n- Comprehensive health and medical coverage\n- Flexible leave policy and professional development allowance';
         break;
     }
     setDescription((prev) => (prev ? prev + snippet : snippet.trim()));
@@ -150,6 +153,9 @@ export function JdEditor({ initialJob, defaultCompany = '' }: JdEditorProps) {
     }
   };
 
+  // Sync ref on every render so the keyboard listener always calls current state
+  handleSaveRef.current = handleSave;
+
   // Word count & Char count
   const words = description.trim() ? description.trim().split(/\s+/).length : 0;
   const chars = description.length;
@@ -158,7 +164,7 @@ export function JdEditor({ initialJob, defaultCompany = '' }: JdEditorProps) {
     <div className="min-h-screen flex flex-col bg-background text-foreground font-sans pb-24 overflow-x-hidden">
       {/* Top Fixed Header */}
       <header className="sticky top-0 z-30 border-b border-border/80 bg-background/95 backdrop-blur-md">
-        <div className="max-w-5xl mx-auto px-3 sm:px-6 h-14 sm:h-16 flex items-center justify-between gap-2 sm:gap-4">
+        <div className="max-w-6xl mx-auto px-3 sm:px-6 h-14 sm:h-16 flex items-center justify-between gap-2 sm:gap-4">
           <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
             <Link
               href="/"
@@ -177,9 +183,13 @@ export function JdEditor({ initialJob, defaultCompany = '' }: JdEditorProps) {
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-            <span className="hidden md:inline text-xs text-muted-foreground font-medium mr-1">
-              {chars > 0 ? `${words} words · ${chars} chars` : 'Ctrl + S to save'}
-            </span>
+            <div className="hidden sm:flex items-center gap-2 text-xs text-muted-foreground font-medium mr-1">
+              {chars > 0 && <span>{words} words · {chars} chars</span>}
+              {chars > 0 && <span className="text-muted-foreground/30">·</span>}
+              <span className="inline-flex items-center gap-1 bg-muted/70 px-2 py-0.5 rounded text-[11px] border border-border/70">
+                <kbd className="font-mono">Ctrl</kbd>+<kbd className="font-mono">S</kbd> to save
+              </span>
+            </div>
 
             <ThemeToggle className="h-8 w-8 sm:h-9 sm:w-9" />
 
@@ -187,6 +197,7 @@ export function JdEditor({ initialJob, defaultCompany = '' }: JdEditorProps) {
               onClick={handleSave}
               disabled={saving}
               size="sm"
+              title="Save Job Description (Ctrl + S)"
               className="gap-1.5 sm:gap-2 h-9 sm:h-10 px-3 sm:px-5 text-xs sm:text-sm font-semibold shadow-xs"
             >
               {saving ? (
@@ -203,7 +214,7 @@ export function JdEditor({ initialJob, defaultCompany = '' }: JdEditorProps) {
       </header>
 
       {/* Main Document Workspace */}
-      <main className="flex-1 max-w-4xl w-full mx-auto px-3 sm:px-6 py-6 sm:py-12 space-y-6 sm:space-y-8">
+      <main className="flex-1 max-w-6xl w-full mx-auto px-3 sm:px-6 py-6 sm:py-10 space-y-6 sm:space-y-8">
         {/* Title Area: Role Title */}
         <div className="space-y-2">
           <Input
@@ -217,9 +228,9 @@ export function JdEditor({ initialJob, defaultCompany = '' }: JdEditorProps) {
 
         {/* Structured Metadata Grid */}
         <div className="p-5 sm:p-6 rounded-2xl border border-border/80 bg-card/70 shadow-xs space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-4">
-            {/* Company Name (Wider column to comfortably fit long company names) */}
-            <div className="sm:col-span-2 lg:col-span-5 space-y-1.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+            {/* Company Name */}
+            <div className="space-y-1.5">
               <Label htmlFor="company" className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5 uppercase tracking-wide">
                 <Building className="w-3.5 h-3.5 text-muted-foreground" />
                 Company <span className="text-destructive">*</span>
@@ -227,7 +238,7 @@ export function JdEditor({ initialJob, defaultCompany = '' }: JdEditorProps) {
               <Input
                 id="company"
                 type="text"
-                placeholder="e.g. Stripe, OpenAI, Byteflow Innovations"
+                placeholder="e.g. Stripe, OpenAI, Byteflow"
                 value={companyName}
                 onChange={(e) => setCompanyName(e.target.value)}
                 required
@@ -236,7 +247,7 @@ export function JdEditor({ initialJob, defaultCompany = '' }: JdEditorProps) {
             </div>
 
             {/* Location */}
-            <div className="sm:col-span-1 lg:col-span-3 space-y-1.5">
+            <div className="space-y-1.5">
               <Label htmlFor="loc" className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5 uppercase tracking-wide">
                 <MapPin className="w-3.5 h-3.5 text-muted-foreground" />
                 Location
@@ -244,23 +255,23 @@ export function JdEditor({ initialJob, defaultCompany = '' }: JdEditorProps) {
               <Input
                 id="loc"
                 type="text"
-                placeholder="e.g. Remote (US) / SF"
+                placeholder="e.g. Remote / Bengaluru / Pune"
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
                 className="h-11 text-sm rounded-xl"
               />
             </div>
 
-            {/* Compensation */}
-            <div className="sm:col-span-1 lg:col-span-2 space-y-1.5">
-              <Label htmlFor="comp" className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5 uppercase tracking-wide">
-                <DollarSign className="w-3.5 h-3.5 text-muted-foreground" />
-                Compensation
+            {/* Salary in INR */}
+            <div className="space-y-1.5">
+              <Label htmlFor="salary" className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5 uppercase tracking-wide">
+                <IndianRupee className="w-3.5 h-3.5 text-muted-foreground" />
+                Salary (INR)
               </Label>
               <Input
-                id="comp"
+                id="salary"
                 type="text"
-                placeholder="e.g. $190k - $240k"
+                placeholder="e.g. ₹15 - 25 LPA"
                 value={salaryRange}
                 onChange={(e) => setSalaryRange(e.target.value)}
                 className="h-11 text-sm rounded-xl"
@@ -268,7 +279,7 @@ export function JdEditor({ initialJob, defaultCompany = '' }: JdEditorProps) {
             </div>
 
             {/* Application Status (Defaults to Applied) */}
-            <div className="sm:col-span-2 lg:col-span-2 space-y-1.5">
+            <div className="space-y-1.5">
               <Label htmlFor="status" className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5 uppercase tracking-wide">
                 <Briefcase className="w-3.5 h-3.5 text-muted-foreground" />
                 Status
@@ -351,7 +362,7 @@ export function JdEditor({ initialJob, defaultCompany = '' }: JdEditorProps) {
           <Input
             id="notes"
             type="text"
-            placeholder="e.g. Applied via Sarah (referral). Round 1 technical interview scheduled for Thursday."
+            placeholder="e.g. Applied via referral. Round 1 technical interview scheduled for Thursday."
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             className="h-11 text-base sm:text-sm rounded-xl"
@@ -361,7 +372,7 @@ export function JdEditor({ initialJob, defaultCompany = '' }: JdEditorProps) {
 
       {/* Floating / Sticky Bottom Bar (Always clearly visible without scrolling!) */}
       <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-border/80 bg-background/95 backdrop-blur-md shadow-lg py-2.5 sm:py-3.5 px-3 sm:px-6">
-        <div className="max-w-4xl mx-auto flex items-center justify-between gap-2 sm:gap-4">
+        <div className="max-w-6xl mx-auto flex items-center justify-between gap-2 sm:gap-4">
           <Link
             href="/"
             className="text-xs sm:text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5 shrink-0"
@@ -371,13 +382,18 @@ export function JdEditor({ initialJob, defaultCompany = '' }: JdEditorProps) {
           </Link>
 
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-            <span className="hidden sm:inline text-xs text-muted-foreground">
-              {words} words · {chars} chars
+            <span className="hidden sm:inline-flex items-center gap-2 text-xs text-muted-foreground">
+              <span>{words} words · {chars} chars</span>
+              <span className="text-muted-foreground/30">·</span>
+              <span className="inline-flex items-center gap-1 bg-muted/70 px-2 py-0.5 rounded text-[11px] border border-border/70">
+                <kbd className="font-mono">Ctrl</kbd>+<kbd className="font-mono">S</kbd> to save
+              </span>
             </span>
 
             <Button
               onClick={handleSave}
               disabled={saving}
+              title="Save Job Description (Ctrl + S)"
               className="gap-1.5 sm:gap-2 h-10 sm:h-11 px-4 sm:px-7 text-xs sm:text-sm font-semibold rounded-xl shadow-md"
             >
               {saving ? (
