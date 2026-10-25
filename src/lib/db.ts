@@ -1,4 +1,5 @@
-import { Pool } from 'pg';
+import { Pool as PgPool } from 'pg';
+import { Pool as NeonPool } from '@neondatabase/serverless';
 import fs from 'fs/promises';
 import path from 'path';
 import crypto from 'crypto';
@@ -11,55 +12,76 @@ function getDatabaseUrl(): string | undefined {
 
 const isPostgresConfigured = Boolean(getDatabaseUrl());
 
-let pgPool: Pool | null = null;
-let pgInitialized = false;
+interface QueryablePool {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  query: (text: string, params?: unknown[]) => Promise<{ rows: any[]; rowCount?: number | null }>;
+}
 
-function getPgPool(): Pool {
+let pgPool: QueryablePool | null = null;
+let pgInitialized = false;
+let initPromise: Promise<void> | null = null;
+
+function getPgPool(): QueryablePool {
   if (!pgPool) {
     const connectionString = getDatabaseUrl()!;
     const isLocalhost = connectionString.includes('localhost') || connectionString.includes('127.0.0.1');
+    const isNeon = connectionString.includes('neon.tech');
 
-    pgPool = new Pool({
-      connectionString,
-      ssl: isLocalhost ? false : { rejectUnauthorized: false },
-      max: 10,
-    });
+    if (isNeon) {
+      // Use Neon's optimized serverless pool over WebSockets/fetch
+      pgPool = new NeonPool({
+        connectionString,
+      });
+    } else {
+      pgPool = new PgPool({
+        connectionString,
+        ssl: isLocalhost ? false : { rejectUnauthorized: false },
+        max: 5,
+        connectionTimeoutMillis: 5000,
+        idleTimeoutMillis: 10000,
+      });
+    }
   }
   return pgPool;
 }
 
 async function initPostgres(): Promise<void> {
   if (pgInitialized || !isPostgresConfigured) return;
-  const pool = getPgPool();
+  if (!initPromise) {
+    initPromise = (async () => {
+      const pool = getPgPool();
 
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS users (
-      id TEXT PRIMARY KEY,
-      username TEXT UNIQUE NOT NULL,
-      password_hash TEXT NOT NULL,
-      created_at TIMESTAMPTZ DEFAULT NOW()
-    );
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS users (
+          id TEXT PRIMARY KEY,
+          username TEXT UNIQUE NOT NULL,
+          password_hash TEXT NOT NULL,
+          created_at TIMESTAMPTZ DEFAULT NOW()
+        );
 
-    CREATE TABLE IF NOT EXISTS job_descriptions (
-      id TEXT PRIMARY KEY,
-      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-      company_name TEXT NOT NULL,
-      role_title TEXT,
-      location TEXT,
-      job_type TEXT,
-      salary_range TEXT,
-      description TEXT NOT NULL,
-      notes TEXT,
-      status TEXT DEFAULT 'Saved',
-      created_at TIMESTAMPTZ DEFAULT NOW(),
-      updated_at TIMESTAMPTZ DEFAULT NOW()
-    );
+        CREATE TABLE IF NOT EXISTS job_descriptions (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          company_name TEXT NOT NULL,
+          role_title TEXT,
+          location TEXT,
+          job_type TEXT,
+          salary_range TEXT,
+          description TEXT NOT NULL,
+          notes TEXT,
+          status TEXT DEFAULT 'Saved',
+          created_at TIMESTAMPTZ DEFAULT NOW(),
+          updated_at TIMESTAMPTZ DEFAULT NOW()
+        );
 
-    CREATE INDEX IF NOT EXISTS idx_jd_user ON job_descriptions(user_id);
-    CREATE INDEX IF NOT EXISTS idx_jd_company ON job_descriptions(user_id, company_name);
-  `);
+        CREATE INDEX IF NOT EXISTS idx_jd_user ON job_descriptions(user_id);
+        CREATE INDEX IF NOT EXISTS idx_jd_company ON job_descriptions(user_id, company_name);
+      `);
 
-  pgInitialized = true;
+      pgInitialized = true;
+    })();
+  }
+  await initPromise;
 }
 
 // ----------------------------------------------------
@@ -209,8 +231,9 @@ export async function getJobDescriptions(
     const params: (string | number)[] = [userId];
 
     if (trimmedSearch) {
+      const escaped = trimmedSearch.replace(/[%_\\]/g, '\\$&');
       query += ` AND (LOWER(company_name) LIKE $2 OR LOWER(COALESCE(role_title, '')) LIKE $2)`;
-      params.push(`%${trimmedSearch}%`);
+      params.push(`%${escaped}%`);
     }
 
     query += ' ORDER BY created_at DESC';
@@ -457,6 +480,21 @@ export async function importJobDescriptions(
       )
     );
 
+    const itemsToInsert: Array<{
+      id: string;
+      userId: string;
+      company_name: string;
+      role_title: string;
+      location: string;
+      job_type: string;
+      salary_range: string;
+      description: string;
+      notes: string;
+      status: string;
+      created_at: string;
+      updated_at: string;
+    }> = [];
+
     for (const item of validItems) {
       const key = `${item.company_name.toLowerCase().trim()}___${(item.role_title || '').toLowerCase().trim()}`;
       if (skipDuplicates && existingKeys.has(key)) {
@@ -471,27 +509,59 @@ export async function importJobDescriptions(
           ? item.status
           : 'Saved';
 
+      itemsToInsert.push({
+        id,
+        userId,
+        company_name: item.company_name.trim(),
+        role_title: item.role_title?.trim() || '',
+        location: item.location?.trim() || '',
+        job_type: item.job_type?.trim() || 'Full-time',
+        salary_range: item.salary_range?.trim() || '',
+        description: item.description.trim(),
+        notes: item.notes?.trim() || '',
+        status,
+        created_at: now,
+        updated_at: now,
+      });
+      existingKeys.add(key);
+    }
+
+    // Insert in batches of 25 to minimize network roundtrips and avoid serverless timeouts
+    const BATCH_SIZE = 25;
+    for (let i = 0; i < itemsToInsert.length; i += BATCH_SIZE) {
+      const chunk = itemsToInsert.slice(i, i + BATCH_SIZE);
+      const valueClauses: string[] = [];
+      const values: unknown[] = [];
+      let pIdx = 1;
+
+      for (const it of chunk) {
+        valueClauses.push(
+          `($${pIdx}, $${pIdx + 1}, $${pIdx + 2}, $${pIdx + 3}, $${pIdx + 4}, $${pIdx + 5}, $${pIdx + 6}, $${pIdx + 7}, $${pIdx + 8}, $${pIdx + 9}, $${pIdx + 10}, $${pIdx + 11})`
+        );
+        values.push(
+          it.id,
+          it.userId,
+          it.company_name,
+          it.role_title,
+          it.location,
+          it.job_type,
+          it.salary_range,
+          it.description,
+          it.notes,
+          it.status,
+          it.created_at,
+          it.updated_at
+        );
+        pIdx += 12;
+      }
+
       await pool.query(
         `INSERT INTO job_descriptions (
           id, user_id, company_name, role_title, location, job_type, salary_range, description, notes, status, created_at, updated_at
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
-        [
-          id,
-          userId,
-          item.company_name.trim(),
-          item.role_title?.trim() || '',
-          item.location?.trim() || '',
-          item.job_type?.trim() || 'Full-time',
-          item.salary_range?.trim() || '',
-          item.description.trim(),
-          item.notes?.trim() || '',
-          status,
-          now,
-          now,
-        ]
+        ) VALUES ${valueClauses.join(', ')}`,
+        values
       );
-      existingKeys.add(key);
-      importedCount++;
+      importedCount += chunk.length;
     }
 
     return { importedCount, skippedCount, total: items.length };

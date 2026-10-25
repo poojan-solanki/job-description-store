@@ -4,7 +4,6 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { DeleteDialog } from '@/components/delete-dialog';
 import { JobDescription, ApplicationStatus } from '@/lib/types';
@@ -16,11 +15,9 @@ import {
   Check,
   Pencil,
   Trash2,
-  Building,
   Briefcase,
   MapPin,
   IndianRupee,
-  Calendar,
   Clock,
   ChevronDown,
 } from 'lucide-react';

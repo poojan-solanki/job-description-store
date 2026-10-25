@@ -59,8 +59,32 @@ export async function saveJobAction(
     return { success: false, error: 'Company name is required.' };
   }
 
+  if (data.company_name.length > 255) {
+    return { success: false, error: 'Company name cannot exceed 255 characters.' };
+  }
+
+  if (data.role_title && data.role_title.length > 255) {
+    return { success: false, error: 'Role title cannot exceed 255 characters.' };
+  }
+
+  if (data.location && data.location.length > 255) {
+    return { success: false, error: 'Location cannot exceed 255 characters.' };
+  }
+
+  if (data.salary_range && data.salary_range.length > 255) {
+    return { success: false, error: 'Salary range cannot exceed 255 characters.' };
+  }
+
   if (!data.description?.trim()) {
     return { success: false, error: 'Job description is required.' };
+  }
+
+  if (data.description.length > 300000) {
+    return { success: false, error: 'Job description cannot exceed 300,000 characters.' };
+  }
+
+  if (data.notes && data.notes.length > 50000) {
+    return { success: false, error: 'Notes cannot exceed 50,000 characters.' };
   }
 
   try {
@@ -78,8 +102,6 @@ export async function saveJobAction(
     }
 
     revalidatePath('/');
-    revalidatePath('/', 'page');
-    revalidatePath('/', 'layout');
     return { success: true, job: result };
   } catch (err: unknown) {
     console.error('saveJobAction error:', err);
@@ -122,8 +144,6 @@ export async function deleteJobAction(id: string): Promise<{ success: boolean; e
       return { success: false, error: 'Record not found or failed to delete.' };
     }
     revalidatePath('/');
-    revalidatePath('/', 'page');
-    revalidatePath('/', 'layout');
     return { success: true };
   } catch (err: unknown) {
     console.error('deleteJobAction error:', err);
@@ -147,6 +167,10 @@ export async function importJobsAction(
 
   if (!Array.isArray(items) || items.length === 0) {
     return { success: false, error: 'No job descriptions found to import.' };
+  }
+
+  if (items.length > 500) {
+    return { success: false, error: 'Cannot import more than 500 job descriptions at once.' };
   }
 
   try {

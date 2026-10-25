@@ -3,7 +3,18 @@ import bcrypt from 'bcryptjs';
 import { cookies } from 'next/headers';
 
 const COOKIE_NAME = 'jd_vault_session';
-const SECRET_KEY = process.env.SESSION_SECRET || 'job-description-store-super-secret-key-2026-secure-random';
+const isProd = process.env.NODE_ENV === 'production';
+if (isProd && !process.env.SESSION_SECRET) {
+  console.warn(
+    '[SECURITY ALERT] SESSION_SECRET is not configured in environment variables. Set a strong random secret in your Vercel Project Settings for production security.'
+  );
+}
+
+const SECRET_KEY =
+  process.env.SESSION_SECRET ||
+  (isProd
+    ? 'job-description-store-production-session-fallback-secret-2026'
+    : 'job-description-store-super-secret-key-2026-secure-random');
 const key = new TextEncoder().encode(SECRET_KEY);
 
 export async function hashPassword(password: string): Promise<string> {

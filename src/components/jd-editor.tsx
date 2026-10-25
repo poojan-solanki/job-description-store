@@ -20,7 +20,6 @@ import {
   MapPin,
   IndianRupee,
   FileText,
-  Sparkles,
   Check,
 } from 'lucide-react';
 
@@ -34,34 +33,13 @@ export function JdEditor({ initialJob, defaultCompany = '' }: JdEditorProps) {
   const [companyName, setCompanyName] = useState(initialJob?.company_name || defaultCompany);
   const [roleTitle, setRoleTitle] = useState(initialJob?.role_title || '');
   const [location, setLocation] = useState(initialJob?.location || '');
-  const [jobType, setJobType] = useState(initialJob?.job_type || 'Full-time');
+  const jobType = initialJob?.job_type || 'Full-time';
   const [salaryRange, setSalaryRange] = useState(initialJob?.salary_range || '');
   const [status, setStatus] = useState<ApplicationStatus>(initialJob?.status || 'Applied');
   const [description, setDescription] = useState(initialJob?.description || '');
   const [notes, setNotes] = useState(initialJob?.notes || '');
   const [saving, setSaving] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
-
-  // When opening a new JD (!initialJob), ensure other fields start fresh and status defaults to 'Applied'
-  useEffect(() => {
-    if (!initialJob) {
-      setCompanyName(defaultCompany);
-      setLocation('');
-      setSalaryRange('');
-      setStatus('Applied');
-      setDescription('');
-      setNotes('');
-    } else {
-      setCompanyName(initialJob.company_name);
-      setRoleTitle(initialJob.role_title || '');
-      setLocation(initialJob.location || '');
-      setJobType(initialJob.job_type || 'Full-time');
-      setSalaryRange(initialJob.salary_range || '');
-      setStatus(initialJob.status || 'Applied');
-      setDescription(initialJob.description || '');
-      setNotes(initialJob.notes || '');
-    }
-  }, [initialJob, defaultCompany]);
 
   // Keep a ref to handleSave so keydown listener always calls the freshest state
   const handleSaveRef = useRef<() => void>(() => {});
@@ -153,8 +131,10 @@ export function JdEditor({ initialJob, defaultCompany = '' }: JdEditorProps) {
     }
   };
 
-  // Sync ref on every render so the keyboard listener always calls current state
-  handleSaveRef.current = handleSave;
+  // Sync ref on render so the keyboard listener always calls current state
+  useEffect(() => {
+    handleSaveRef.current = handleSave;
+  });
 
   // Word count & Char count
   const words = description.trim() ? description.trim().split(/\s+/).length : 0;

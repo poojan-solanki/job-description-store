@@ -59,3 +59,17 @@ The application can be configured using environment variables:
 | `SESSION_SECRET` | Recommended | Secret key used to sign JWT session cookies. |
 
 Database tables (`users` and `job_descriptions`) are created automatically upon initial connection.
+
+## Deployment on Vercel
+
+The repository includes a [vercel.json](file:///p:/Syncthing/personal-progs/Job%20Description%20Store/vercel.json) that automatically pins serverless functions to the **Singapore (`sin1`)** region to co-locate
+ compute with your PostgreSQL database:
+
+```json
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "regions": ["sin1"]
+}
+```
+
+If your database is in a different region, update `"regions": ["<region_code>"]` in [vercel.json](file:///p:/Syncthing/personal-progs/Job%20Description%20Store/vercel.json) or adjust **Settings > Functions > Function Region** in the Vercel dashboard. Co-locating Vercel functions with your database reduces round-trip query latency from ~280ms down to <5ms.

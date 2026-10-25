@@ -13,7 +13,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { deleteAccountAction } from '@/app/actions/auth';
 import { toast } from 'sonner';
-import { UserX, Loader2, AlertTriangle } from 'lucide-react';
+import { UserX, Loader2 } from 'lucide-react';
 
 interface DeleteAccountDialogProps {
   open: boolean;

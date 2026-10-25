@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { loginAction, registerAction } from '@/app/actions/auth';
 import { toast } from 'sonner';
 import { Briefcase, Lock, User, Sparkles, ShieldCheck, Loader2 } from 'lucide-react';

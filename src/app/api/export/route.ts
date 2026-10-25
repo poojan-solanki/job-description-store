@@ -28,8 +28,12 @@ export async function GET(request: Request) {
 
     const escapeCsv = (str?: string) => {
       if (!str) return '""';
-      const clean = str.replace(/"/g, '""');
-      return `"${clean}"`;
+      let clean = str;
+      // Prevent CSV Formula Injection (DDE) in spreadsheet software
+      if (/^[=+\-@\t\r]/.test(clean)) {
+        clean = "'" + clean;
+      }
+      return `"${clean.replace(/"/g, '""')}"`;
     };
 
     const rows = jobs.map((j) => [

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useRef, useEffect, useTransition } from 'react';
+import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { JobDescription, ApplicationStatus } from '@/lib/types';
@@ -13,13 +13,11 @@ import { DataBackupDialog } from '@/components/data-backup-dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import {
   Search,
   Plus,
   Building,
-  Briefcase,
   MapPin,
   IndianRupee,
   Copy,
@@ -30,7 +28,6 @@ import {
   Trash2,
   User as UserIcon,
   UserX,
-  Sparkles,
   ChevronDown,
   ArrowUpDown,
   Upload,
@@ -42,13 +39,21 @@ interface DashboardProps {
     id: string;
     username: string;
   };
-  isCloudDb: boolean;
+  isCloudDb?: boolean;
 }
 
-export function Dashboard({ initialJobs, currentUser, isCloudDb }: DashboardProps) {
+export function Dashboard({ initialJobs, currentUser }: DashboardProps) {
   const router = useRouter();
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [jobs, setJobs] = useState<JobDescription[]>(initialJobs);
+  const [prevInitialJobs, setPrevInitialJobs] = useState(initialJobs);
+
+  // Sync state cleanly when initialJobs prop updates (e.g. after revalidation) without effect cascade
+  if (initialJobs !== prevInitialJobs) {
+    setPrevInitialJobs(initialJobs);
+    setJobs(initialJobs);
+  }
+
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string>('All');
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -75,12 +80,7 @@ export function Dashboard({ initialJobs, currentUser, isCloudDb }: DashboardProp
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Keep jobs state synchronized whenever initialJobs prop changes
-  useEffect(() => {
-    setJobs(initialJobs);
-  }, [initialJobs]);
-
-  const syncJobs = async () => {
+  const syncJobs = useCallback(async () => {
     try {
       const res = await getJobsAction();
       if (res.success && res.jobs) {
@@ -89,17 +89,7 @@ export function Dashboard({ initialJobs, currentUser, isCloudDb }: DashboardProp
     } catch (err) {
       console.error('Failed to sync latest jobs:', err);
     }
-  };
-
-  // Immediately refresh and synchronize fresh jobs from DB on mount and window focus
-  useEffect(() => {
-    router.refresh();
-    syncJobs();
-    window.addEventListener('focus', syncJobs);
-    return () => {
-      window.removeEventListener('focus', syncJobs);
-    };
-  }, [router]);
+  }, []);
 
   // Real-time filtering by Company Name, Role, or Description
   const filteredJobs = useMemo(() => {

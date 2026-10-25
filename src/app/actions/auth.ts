@@ -12,6 +12,9 @@ export interface AuthResponse {
   };
 }
 
+// Constant dummy hash to mitigate user enumeration timing attacks
+const DUMMY_HASH = '$2a$10$e8Q.2wKz5Uu0Z5gqY1z0Ae6kO4rU0m6kO4rU0m6kO4rU0m6kO4rU0';
+
 export async function registerAction(formData: { username: string; password: string }): Promise<AuthResponse> {
   const username = formData.username?.trim();
   const password = formData.password?.trim();
@@ -20,8 +23,16 @@ export async function registerAction(formData: { username: string; password: str
     return { success: false, error: 'Username must be at least 3 characters long.' };
   }
 
+  if (username.length > 50) {
+    return { success: false, error: 'Username cannot exceed 50 characters.' };
+  }
+
   if (!password || password.length < 6) {
     return { success: false, error: 'Password must be at least 6 characters long.' };
+  }
+
+  if (password.length > 128) {
+    return { success: false, error: 'Password cannot exceed 128 characters.' };
   }
 
   try {
@@ -57,9 +68,15 @@ export async function loginAction(formData: { username: string; password: string
     return { success: false, error: 'Please enter both username and password.' };
   }
 
+  if (username.length > 50 || password.length > 128) {
+    return { success: false, error: 'Invalid username or password.' };
+  }
+
   try {
     const user = await findUserByUsername(username);
     if (!user) {
+      // Execute dummy password verification to maintain constant-time response and prevent user enumeration
+      await verifyPassword(password, DUMMY_HASH);
       return { success: false, error: 'Invalid username or password.' };
     }
 
